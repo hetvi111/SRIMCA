@@ -415,11 +415,19 @@ class ApiService {
     required String title,
     required String content,
     String priority = 'normal',
+    String category = 'notice',
+    String targetRole = 'student',
   }) async {
     try {
       final response = await post(
         '/api/notices/',
-        body: {'title': title, 'content': content, 'priority': priority},
+        body: {
+          'title': title,
+          'content': content,
+          'priority': priority,
+          'category': category,
+          'target_role': targetRole,
+        },
       );
 
       if (response.statusCode == 201) {
@@ -437,11 +445,17 @@ class ApiService {
     required String title,
     required String description,
     required String dueDate,
+    String subject = 'General',
   }) async {
     try {
       final response = await post(
         '/api/assignments/',
-        body: {'title': title, 'description': description, 'due_date': dueDate},
+        body: {
+          'title': title,
+          'description': description,
+          'due_date': dueDate,
+          'subject': subject,
+        },
       );
 
       if (response.statusCode == 201) {
@@ -713,6 +727,12 @@ class ApiService {
 
   /// Ask SRIMCA AI a question and get response
   static Future<String> askAI(String question) async {
+    final result = await askAIDetailed(question);
+    return result['answer'] as String;
+  }
+
+  /// Ask SRIMCA AI a question and get full response including suggestions and guidance
+  static Future<Map<String, dynamic>> askAIDetailed(String question) async {
     try {
       debugPrint('Sending question to AI: $question');
       final user = await AuthService.getUser();
@@ -720,8 +740,13 @@ class ApiService {
         '/api/ai/chat',
         body: {
           'question': question,
-          if (user != null && (user['_id']?.toString().isNotEmpty ?? false))
-            'user_id': user['_id'].toString(),
+          if (user != null) ...{
+            if (user['_id']?.toString().isNotEmpty ?? false)
+              'user_id': user['_id'].toString(),
+            if (user['role'] != null) 'role': user['role'].toString(),
+            if (user['course'] != null) 'course': user['course'].toString(),
+            if (user['semester'] != null) 'semester': user['semester'].toString(),
+          }
         },
       );
 
@@ -730,17 +755,36 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        if (data['status'] == 'success') {
-          return data['answer'] as String? ??
-              "I apologize, but I couldn't generate a response.";
+        if (data['status'] == 'success' || data['success'] == true) {
+          final followUps = (data['follow_up_questions'] as List? ?? data['suggestions'] as List?)
+                  ?.map((e) => e.toString())
+                  .toList() ??
+              <String>[];
+          return {
+            'answer': data['answer'] as String? ??
+                "I apologize, but I couldn't generate a response.",
+            'follow_up_questions': followUps,
+            'personalized_guidance':
+                data['personalized_guidance'] as String? ?? "",
+          };
         }
       }
 
       // Return fallback message on error
-      return "I apologize, but I'm having trouble processing your request right now. Please try again later.";
+      return {
+        'answer':
+            "I apologize, but I'm having trouble processing your request right now. Please try again later.",
+        'follow_up_questions': <String>[],
+        'personalized_guidance': "",
+      };
     } catch (e) {
       debugPrint('Ask AI Error: $e');
-      return "I apologize, but I'm having trouble connecting to the AI service. Please check your internet connection and try again.";
+      return {
+        'answer':
+            "I apologize, but I'm having trouble connecting to the AI service. Please check your internet connection and try again.",
+        'follow_up_questions': <String>[],
+        'personalized_guidance': "",
+      };
     }
   }
 

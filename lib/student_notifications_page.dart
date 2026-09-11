@@ -22,6 +22,7 @@ class StudentNotificationsPage extends StatefulWidget {
 class _StudentNotificationsPageState extends State<StudentNotificationsPage> {
   List<dynamic> notifications = [];
   bool isLoading = true;
+  String selectedFilter = 'all'; // 'all', 'exam', 'notice', 'event'
 
   @override
   void initState() {
@@ -30,9 +31,15 @@ class _StudentNotificationsPageState extends State<StudentNotificationsPage> {
   }
 
   Future<void> _loadNotifications() async {
+    setState(() {
+      isLoading = true;
+    });
+
     try {
-      // Fetch role-based notifications from backend
-      final notifs = await ApiService.getMyNotifications();
+      // Fetch role-based notifications from backend with type filter
+      final notifs = await ApiService.getMyNotifications(
+        type: selectedFilter == 'all' ? null : selectedFilter,
+      );
       if (mounted) {
         setState(() {
           notifications = notifs;
@@ -43,8 +50,12 @@ class _StudentNotificationsPageState extends State<StudentNotificationsPage> {
       print('Error loading notifications: $e');
       // Show demo data when API fails
       if (mounted) {
+        final demo = _getDemoNotifications();
+        final filteredDemo = selectedFilter == 'all'
+            ? demo
+            : demo.where((n) => n['type'] == selectedFilter).toList();
         setState(() {
-          notifications = _getDemoNotifications();
+          notifications = filteredDemo;
           isLoading = false;
         });
       }
@@ -71,62 +82,62 @@ class _StudentNotificationsPageState extends State<StudentNotificationsPage> {
       },
       {
         'id': '3',
-        'type': 'deadline',
-        'title': 'Assignment Deadline',
-        'message': 'AI Assignment submission deadline extended to February 25, 2024. Submit through student portal.',
+        'type': 'notice',
+        'title': 'Library Book Return Notice',
+        'message': 'All students must return borrowed library books before the upcoming examination week.',
         'timestamp': '2024-02-18 09:15:00',
         'isRead': true,
       },
       {
         'id': '4',
-        'type': 'update',
-        'title': 'System Maintenance',
-        'message': 'The student portal will be unavailable on February 22, 2024 (2:00 AM - 6:00 AM) for maintenance.',
-        'timestamp': '2024-02-17 16:00:00',
-        'isRead': true,
-      },
-      {
-        'id': '5',
         'type': 'exam',
         'title': 'Practical Exam Notice',
-        'message': 'Practical examinations for all courses will be held after theory exams. Lab in-charge will share the schedule.',
+        'message': 'Practical examinations for all BCA & MCA courses will be held after theory exams.',
         'timestamp': '2024-02-16 11:45:00',
         'isRead': true,
       },
       {
-        'id': '6',
+        'id': '5',
         'type': 'event',
-        'title': 'Guest Lecture',
-        'message': 'Dr. Sarah Johnson from MIT will conduct a guest lecture on "Future of AI" on February 28, 2024 at 2:00 PM.',
+        'title': 'Annual Guest Lecture on AI',
+        'message': 'Industry experts from TCS will conduct a workshop on Artificial Intelligence and Machine Learning.',
         'timestamp': '2024-02-15 13:20:00',
+        'isRead': true,
+      },
+      {
+        'id': '6',
+        'type': 'notice',
+        'title': 'Fee Payment Deadline Notice',
+        'message': 'Last date for term fee submission is March 10, 2024.',
+        'timestamp': '2024-02-14 10:00:00',
         'isRead': true,
       },
     ];
   }
 
   IconData _getNotificationIcon(String type) {
-    switch (type) {
+    switch (type.toLowerCase()) {
       case 'exam':
-        return Icons.quiz;
+        return Icons.quiz_outlined;
       case 'event':
-        return Icons.event;
+        return Icons.event_available;
       case 'deadline':
         return Icons.access_time;
       case 'update':
         return Icons.update;
       case 'notice':
-        return Icons.notifications;
+        return Icons.campaign_outlined;
       case 'assignment':
-        return Icons.assignment_turned_in;
+        return Icons.assignment_outlined;
       default:
-        return Icons.notifications;
+        return Icons.notifications_none;
     }
   }
 
   Color _getNotificationColor(String type) {
-    switch (type) {
+    switch (type.toLowerCase()) {
       case 'exam':
-        return Colors.red;
+        return Colors.redAccent;
       case 'event':
         return Colors.purple;
       case 'deadline':
@@ -134,12 +145,70 @@ class _StudentNotificationsPageState extends State<StudentNotificationsPage> {
       case 'update':
         return Colors.blue;
       case 'notice':
-        return Colors.green;
+        return Colors.teal;
       case 'assignment':
         return Colors.deepPurple;
       default:
         return accentBlue;
     }
+  }
+
+  Widget _buildFilterBar() {
+    final filters = [
+      {'key': 'all', 'label': 'All Updates', 'icon': Icons.all_inbox},
+      {'key': 'exam', 'label': 'Exams', 'icon': Icons.quiz},
+      {'key': 'notice', 'label': 'Notices', 'icon': Icons.campaign},
+      {'key': 'event', 'label': 'Events', 'icon': Icons.event},
+    ];
+
+    return Container(
+      color: Colors.grey[50],
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: filters.map((f) {
+            final isSelected = selectedFilter == f['key'];
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                showCheckmark: false,
+                avatar: Icon(
+                  f['icon'] as IconData,
+                  size: 16,
+                  color: isSelected ? Colors.white : navyBlue,
+                ),
+                label: Text(
+                  f['label'] as String,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    color: isSelected ? Colors.white : navyBlue,
+                  ),
+                ),
+                selected: isSelected,
+                selectedColor: navyBlue,
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(
+                    color: isSelected ? navyBlue : Colors.grey[300]!,
+                  ),
+                ),
+                onSelected: (selected) {
+                  if (selected) {
+                    setState(() {
+                      selectedFilter = f['key'] as String;
+                    });
+                    _loadNotifications();
+                  }
+                },
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
   }
 
   @override
@@ -153,19 +222,19 @@ class _StudentNotificationsPageState extends State<StudentNotificationsPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Notifications"),
+        title: const Text("Smart Notifications"),
         backgroundColor: navyBlue,
         foregroundColor: Colors.white,
-        elevation: 6,
+        elevation: 4,
         actions: [
           if (unreadCount > 0)
             Padding(
               padding: const EdgeInsets.only(right: 16),
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.red,
+                    color: Colors.redAccent,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -173,6 +242,7 @@ class _StudentNotificationsPageState extends State<StudentNotificationsPage> {
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -180,21 +250,28 @@ class _StudentNotificationsPageState extends State<StudentNotificationsPage> {
             ),
         ],
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : notifications.isEmpty
-              ? _buildEmptyState()
-              : RefreshIndicator(
-                  onRefresh: _loadNotifications,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: notifications.length,
-                    itemBuilder: (context, index) {
-                      final notification = notifications[index];
-                      return _buildNotificationCard(notification);
-                    },
-                  ),
-                ),
+      body: Column(
+        children: [
+          _buildFilterBar(),
+          Expanded(
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : notifications.isEmpty
+                    ? _buildEmptyState()
+                    : RefreshIndicator(
+                        onRefresh: _loadNotifications,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: notifications.length,
+                          itemBuilder: (context, index) {
+                            final notification = notifications[index];
+                            return _buildNotificationCard(notification);
+                          },
+                        ),
+                      ),
+          ),
+        ],
+      ),
     );
   }
 

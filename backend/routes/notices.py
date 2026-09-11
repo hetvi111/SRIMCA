@@ -135,8 +135,16 @@ def create_notice():
         user_doc = users_collection.find_one({'_id': ObjectId(sender_id)})
         sender_name = user_doc.get('name', 'Faculty') if user_doc else 'Faculty'
         
-        # Determine target role
-        is_event = data.get('is_event', False)
+        # Determine notification category (notice, event, exam)
+        category = data.get('category') or data.get('type')
+        is_event = data.get('is_event', False) or (category == 'event')
+        if category in ['exam', 'event', 'notice']:
+            notification_type = category
+        elif is_event:
+            notification_type = 'event'
+        else:
+            notification_type = 'notice'
+
         if is_event:
             # Events are visible to all
             target_role = 'all'
@@ -160,6 +168,7 @@ def create_notice():
         notice_doc['target_courses'] = target_courses
         notice_doc['target_semesters'] = target_semesters
         notice_doc['is_event'] = is_event
+        notice_doc['category'] = notification_type
         
         # Insert into database
         notices_collection = get_collection(Collections.NOTICES)
@@ -167,71 +176,26 @@ def create_notice():
         
         notice_doc['_id'] = result.inserted_id
         
-        # Create notification with targeting
-        if is_event:
-            # Event notifications go to everyone
-            create_notification(
-                title=f'New Event: {data.get("title", "")}',
-                message=f'{data.get("title", "")} - {data.get("content", "")[:100]}',
-                notification_type='event',
-                target_role='all',
-                sender_role=sender_role,
-                sender_id=sender_id,
-                sender_name=sender_name,
-                related_id=str(result.inserted_id),
-                related_type='notice'
-            )
-        elif target_role == 'all':
-            create_notification(
-                title='New Notice Posted',
-                message=f'A new notice "{data.get("title", "")}" has been posted',
-                notification_type='notice',
-                target_role='all',
-                sender_role=sender_role,
-                sender_id=sender_id,
-                sender_name=sender_name,
-                related_id=str(result.inserted_id),
-                related_type='notice'
-            )
-        elif target_role == 'student':
-            create_notification(
-                title='New Notice for Students',
-                message=f'A new notice "{data.get("title", "")}" has been posted for students',
-                notification_type='notice',
-                target_role='student',
-                target_courses=target_courses,
-                target_semesters=target_semesters,
-                sender_role=sender_role,
-                sender_id=sender_id,
-                sender_name=sender_name,
-                related_id=str(result.inserted_id),
-                related_type='notice'
-            )
-        elif target_role == 'faculty':
-            create_notification(
-                title='New Notice for Faculty',
-                message=f'A new notice "{data.get("title", "")}" has been posted for faculty',
-                notification_type='notice',
-                target_role='faculty',
-                sender_role=sender_role,
-                sender_id=sender_id,
-                sender_name=sender_name,
-                related_id=str(result.inserted_id),
-                related_type='notice'
-            )
-        else:
-            # Default notification
-            create_notification(
-                title='New Notice Posted',
-                message=f'A new notice "{data.get("title", "")}" has been posted',
-                notification_type='notice',
-                target_role=target_role,
-                sender_role=sender_role,
-                sender_id=sender_id,
-                sender_name=sender_name,
-                related_id=str(result.inserted_id),
-                related_type='notice'
-            )
+        # Create notification with targeting & category
+        notif_title_prefix = {
+            'exam': 'Exam Update: ',
+            'event': 'New Event: ',
+            'notice': 'New Notice: '
+        }.get(notification_type, 'New Notice: ')
+
+        create_notification(
+            title=f'{notif_title_prefix}{data.get("title", "")}',
+            message=f'{data.get("content", "")[:120]}',
+            notification_type=notification_type,
+            target_role=target_role if not is_event else 'all',
+            target_courses=target_courses,
+            target_semesters=target_semesters,
+            sender_role=sender_role,
+            sender_id=sender_id,
+            sender_name=sender_name,
+            related_id=str(result.inserted_id),
+            related_type='notice'
+        )
         
         return jsonify({
             'message': 'Notice created successfully',

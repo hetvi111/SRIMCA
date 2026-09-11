@@ -5,6 +5,8 @@ from srimca.app import ask
 from database import get_collection, Collections
 from models import AIQueryModel
 
+from srimca.recommendations import generate_recommendations
+
 ai_bp = Blueprint('ai', __name__, url_prefix='/api/ai')
 
 
@@ -13,6 +15,9 @@ def process_ai_request(save_query=True):
 
     question = data.get('question', '').strip()
     user_id = data.get('user_id', '').strip()
+    user_role = data.get('role', data.get('user_role', 'student')).strip()
+    user_course = data.get('course', '').strip()
+    user_semester = data.get('semester', '').strip()
 
     if not question:
         return jsonify({
@@ -25,6 +30,14 @@ def process_ai_request(save_query=True):
 
         if not answer:
             answer = "I couldn't generate a response."
+
+        rec = generate_recommendations(
+            question=question,
+            answer=answer,
+            user_role=user_role,
+            course=user_course,
+            semester=user_semester
+        )
 
         if save_query and user_id:
             ai_queries = get_collection(Collections.AI_QUERIES)
@@ -40,7 +53,10 @@ def process_ai_request(save_query=True):
         return jsonify({
             'status': 'success',
             'success': True,
-            'answer': answer
+            'answer': answer,
+            'follow_up_questions': rec['follow_up_questions'],
+            'suggestions': rec['follow_up_questions'],
+            'personalized_guidance': rec['personalized_guidance']
         })
 
     except Exception as e:

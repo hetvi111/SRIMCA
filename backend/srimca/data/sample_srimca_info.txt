@@ -1,24 +1,43 @@
 SRIMCA full name is Shrimad Rajchandra Institute of Management and Computer Application.
+
 SRIMCA is located at Maliba Campus, Gopal Vidyanagar, Bardoli-Mahuva Road, Tarsadi, Surat, Gujarat 394350.
+
 SRIMCA is a constituent institute of Uka Tarsadia University (UTU).
+
 SRIMCA offers Master of Computer Applications (MCA), Bachelor of Computer Applications (BCA), Integrated MCA (5-year), Master of Business Administration (MBA), and Integrated MBA (IMBA).
+
 All programmes at SRIMCA are approved by AICTE, New Delhi, and Government of Gujarat.
+
 MCA programme at SRIMCA was established in the year 2002.
+
 MBA programme at SRIMCA was established in the year 2004.
+
 SRIMCA vision is to become a globally recognized premier educational institute for academic excellence, innovation, and character building.
+
 SRIMCA mission is to remain on the cutting edge of education, research, industry partnerships, and social commitment.
+
 SRIMCA provides state-of-the-art computer labs with more than 250 high-end computers and modern software.
+
 SRIMCA campus is equipped with a 200 Mbps dedicated high-speed internet leased line and campus-wide Wi-Fi.
+
 SRIMCA library has an extensive collection of national and international books, IEEE, ACM journals, and digital e-resources.
+
 SRIMCA facilities include air-conditioned auditorium, modern seminar halls, smart interactive classrooms, cafeteria, and sports complex.
+
 SRIMCA provides hostel facilities for boys and girls with 24/7 security and Wi-Fi.
+
 SRIMCA provides bus transportation facilities covering Surat, Navsari, Bardoli, Vyara, and surrounding areas.
-Top recruiters for SRIMCA students include TCS, Infosys, Wipro, L&T Infotech, Capgemini, TatvaSoft, Bacancy, WebOccult, and many top IT companies.
+
 Admission in MCA is conducted via ACPC (Admission Committee for Professional Courses) and Management Quota.
+
 Admission in BCA is conducted directly through Uka Tarsadia University (UTU) admission portal.
 
 MCA 2nd Semester commenced from Thursday, 30 January 2025.
+
+MCA 3rd Semester commenced from Monday, 20 July 2026.
+
 MCA 4th Semester commenced from Monday, 16 December 2024.
+
 BCA 4th and 6th Semester commenced from Monday, 16 December 2024.
 
 MCA 2nd semester Monday 08:30-10:30 has LARAVEL practical.
@@ -51,3 +70,40 @@ MCA 2nd semester Friday 08:30-10:30 has Python practical.
 MCA 2nd semester Friday 10:30-11:30 has Elective theory.
 MCA 2nd semester Friday 11:30-12:15 is BREAK.
 MCA 2nd semester Friday 12:15-02:30 has Lab practice.
+
+MCA 3rd semester Monday 08:30-09:30 has Flutter practical.
+MCA 3rd semester Monday 09:30-10:30 has Flutter practical.
+MCA 3rd semester Monday 10:30-11:30 has Flutter practical.
+MCA 3rd semester Monday 11:30-12:30 is BREAK.
+MCA 3rd semester Monday 12:30-01:30 has Data Analytics and Visualization theory.
+MCA 3rd semester Monday 01:30-02:30 has Content Management System using WordPress theory.
+
+MCA 3rd semester Tuesday 08:30-09:30 has Machine Learning theory.
+MCA 3rd semester Tuesday 09:30-10:30 has Project.
+MCA 3rd semester Tuesday 10:30-11:30 has Content Management System using WordPress theory.
+MCA 3rd semester Tuesday 11:30-12:30 is BREAK.
+MCA 3rd semester Tuesday 12:30-01:30 has Data Analytics and Visualization practical.
+MCA 3rd semester Tuesday 01:30-02:30 has Data Analytics and Visualization practical.
+
+MCA 3rd semester Wednesday 08:30-09:30 has Drone Technologies and Applications theory.
+MCA 3rd semester Wednesday 09:30-10:30 has Drone Technologies and Applications practical.
+MCA 3rd semester Wednesday 10:30-11:30 has Data Analytics and Visualization theory.
+MCA 3rd semester Wednesday 11:30-12:30 is BREAK.
+MCA 3rd semester Wednesday 12:30-01:30 has Flutter theory.
+MCA 3rd semester Wednesday 01:30-02:30 has Content Management System using WordPress theory.
+
+MCA 3rd semester Thursday 08:30-09:30 has Machine Learning theory.
+MCA 3rd semester Thursday 09:30-10:30 has Machine Learning practical.
+MCA 3rd semester Thursday 10:30-11:30 has Machine Learning practical.
+MCA 3rd semester Thursday 11:30-12:30 is BREAK.
+MCA 3rd semester Thursday 12:30-01:30 has Flutter theory.
+MCA 3rd semester Thursday 01:30-02:30 has Project.
+
+MCA 3rd semester Friday 08:30-09:30 has Machine Learning theory.
+MCA 3rd semester Friday 09:30-10:30 has Content Management System using WordPress practical.
+MCA 3rd semester Friday 10:30-11:30 has Content Management System using WordPress practical.
+MCA 3rd semester Friday 11:30-12:30 is BREAK.
+MCA 3rd semester Friday 12:30-01:30 has Flutter theory.
+MCA 3rd semester Friday 01:30-02:30 has Training and Placement.
+
+MCA 3rd semester Saturday has CIE/Project.

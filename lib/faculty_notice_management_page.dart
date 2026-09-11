@@ -84,6 +84,7 @@ class _FacultyNoticeManagementPageState extends State<FacultyNoticeManagementPag
     final titleController = TextEditingController();
     final contentController = TextEditingController();
     String selectedPriority = 'normal';
+    String selectedCategory = 'notice'; // 'notice', 'exam', 'event'
 
     showModalBottomSheet(
       context: context,
@@ -101,124 +102,163 @@ class _FacultyNoticeManagementPageState extends State<FacultyNoticeManagementPag
                 right: 20,
                 top: 20,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Create New Notice',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: navyBlue,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: titleController,
-                    decoration: InputDecoration(
-                      labelText: 'Title',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: accentBlue, width: 2),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Post Smart Announcement',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: navyBlue,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: contentController,
-                    maxLines: 4,
-                    decoration: InputDecoration(
-                      labelText: 'Content',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: accentBlue, width: 2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Priority',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      ChoiceChip(
-                        label: const Text('Low'),
-                        selected: selectedPriority == 'low',
-                        onSelected: (selected) {
-                          setModalState(() => selectedPriority = 'low');
-                        },
-                      ),
-                      ChoiceChip(
-                        label: const Text('Normal'),
-                        selected: selectedPriority == 'normal',
-                        onSelected: (selected) {
-                          setModalState(() => selectedPriority = 'normal');
-                        },
-                      ),
-                      ChoiceChip(
-                        label: const Text('High'),
-                        selected: selectedPriority == 'high',
-                        onSelected: (selected) {
-                          setModalState(() => selectedPriority = 'high');
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: accentBlue,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: titleController,
+                      decoration: InputDecoration(
+                        labelText: 'Title',
+                        border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                      ),
-                      onPressed: () async {
-                        if (titleController.text.isNotEmpty && contentController.text.isNotEmpty) {
-                          try {
-                            await ApiService.createNotice(
-                              title: titleController.text,
-                              content: contentController.text,
-                              priority: selectedPriority,
-                            );
-                            if (mounted) {
-                              Navigator.pop(context);
-                              _loadNotices();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Notice created successfully!')),
-                              );
-                            }
-                          } catch (e) {
-                            if (mounted) {
-                              Navigator.pop(context);
-                              _loadNotices();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Notice created (demo mode)')),
-                              );
-                            }
-                          }
-                        }
-                      },
-                      child: const Text(
-                        'Post Notice',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: accentBlue, width: 2),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: contentController,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        labelText: 'Content',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: accentBlue, width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Category (Target for Students)',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        ChoiceChip(
+                          avatar: const Icon(Icons.campaign, size: 16),
+                          label: const Text('Notice'),
+                          selected: selectedCategory == 'notice',
+                          onSelected: (selected) {
+                            setModalState(() => selectedCategory = 'notice');
+                          },
+                        ),
+                        ChoiceChip(
+                          avatar: const Icon(Icons.quiz, size: 16),
+                          label: const Text('Exam'),
+                          selected: selectedCategory == 'exam',
+                          onSelected: (selected) {
+                            setModalState(() => selectedCategory = 'exam');
+                          },
+                        ),
+                        ChoiceChip(
+                          avatar: const Icon(Icons.event, size: 16),
+                          label: const Text('Event'),
+                          selected: selectedCategory == 'event',
+                          onSelected: (selected) {
+                            setModalState(() => selectedCategory = 'event');
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Priority',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('Low'),
+                          selected: selectedPriority == 'low',
+                          onSelected: (selected) {
+                            setModalState(() => selectedPriority = 'low');
+                          },
+                        ),
+                        ChoiceChip(
+                          label: const Text('Normal'),
+                          selected: selectedPriority == 'normal',
+                          onSelected: (selected) {
+                            setModalState(() => selectedPriority = 'normal');
+                          },
+                        ),
+                        ChoiceChip(
+                          label: const Text('High'),
+                          selected: selectedPriority == 'high',
+                          onSelected: (selected) {
+                            setModalState(() => selectedPriority = 'high');
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: accentBlue,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () async {
+                          if (titleController.text.isNotEmpty && contentController.text.isNotEmpty) {
+                            try {
+                              await ApiService.createNotice(
+                                title: titleController.text,
+                                content: contentController.text,
+                                priority: selectedPriority,
+                                category: selectedCategory,
+                                targetRole: 'student',
+                              );
+                              if (mounted) {
+                                Navigator.pop(context);
+                                _loadNotices();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Smart notification sent to students!')),
+                                );
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                Navigator.pop(context);
+                                _loadNotices();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Notice created (demo mode)')),
+                                );
+                              }
+                            }
+                          }
+                        },
+                        child: const Text(
+                          'Post Notice & Notify Students',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
               ),
             );
           },

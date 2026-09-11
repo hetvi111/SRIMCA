@@ -98,12 +98,16 @@ def get_my_notifications():
             if semester:
                 user_semesters = [semester]
         
+        # Optional type filter
+        notification_type = request.args.get('type')
+
         # Get notifications for this user
         notifications = get_notifications_for_user(
             user_role=user_role,
             user_id=user_id,
             user_courses=user_courses,
-            user_semesters=user_semesters
+            user_semesters=user_semesters,
+            notification_type=notification_type
         )
 
         # Faculty should see notice notifications (whether posted by admin or faculty).

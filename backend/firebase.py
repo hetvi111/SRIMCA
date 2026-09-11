@@ -7,12 +7,24 @@ import os
 import json
 import firebase_admin
 from firebase_admin import credentials, auth
-from flask import jsonify, request
+from flask import jsonify, request, g
 from functools import wraps
 from config import get_config
 
 # Firebase admin instance
 _firebase_app = None
+
+
+def _safe_print(msg: str):
+    """Print message safely on platforms with restricted output encoding (e.g. Windows cp1252)"""
+    try:
+        print(msg)
+    except UnicodeEncodeError:
+        try:
+            safe_msg = msg.encode('ascii', 'backslashreplace').decode('ascii')
+            print(safe_msg)
+        except Exception:
+            pass
 
 
 def initialize_firebase():
@@ -33,13 +45,13 @@ def initialize_firebase():
         if os.path.exists(json_path):
             cred = credentials.Certificate(json_path)
             _firebase_app = firebase_admin.initialize_app(cred)
-            print(f"✅ Firebase Admin SDK initialized from JSON file")
+            _safe_print(f"✅ Firebase Admin SDK initialized from JSON file")
             return _firebase_app
         else:
             # Fall back to environment variables
             config = get_config()
             if not config.FIREBASE_PRIVATE_KEY or not config.FIREBASE_CLIENT_EMAIL:
-                print("⚠️ Firebase credentials not found. Firebase auth will be disabled.")
+                _safe_print("⚠️ Firebase credentials not found. Firebase auth will be disabled.")
                 return None
             
             # Handle newlines in private key
@@ -57,11 +69,11 @@ def initialize_firebase():
             
             cred = credentials.Certificate(cred_dict)
             _firebase_app = firebase_admin.initialize_app(cred)
-            print(f"✅ Firebase Admin SDK initialized for project: {config.FIREBASE_PROJECT_ID}")
+            _safe_print(f"✅ Firebase Admin SDK initialized for project: {config.FIREBASE_PROJECT_ID}")
             return _firebase_app
         
     except Exception as e:
-        print(f"❌ Failed to initialize Firebase: {e}")
+        _safe_print(f"❌ Failed to initialize Firebase: {e}")
         return None
 
 
@@ -129,8 +141,10 @@ def create_custom_token(uid: str, additional_claims: dict = None):
         if app is None:
             return None
         
-        custom_token = auth.create_custom_token(uid, app=app, additional_claims=additional_claims)
-        return custom_token.decode('utf-8') if custom_token else None
+        custom_token = auth.create_custom_token(uid, developer_claims=additional_claims, app=app)
+        if isinstance(custom_token, bytes):
+            return custom_token.decode('utf-8')
+        return custom_token
     
     except Exception as e:
         print(f"Error creating custom token: {e}")
@@ -162,9 +176,11 @@ def require_firebase_auth(f):
         if decoded_token is None:
             return jsonify({'error': 'Invalid or expired token'}), 401
         
-        # Add the decoded token to the request context
-        request.firebase_user = decoded_token
-        request.firebase_uid = decoded_token.get('uid')
+        # Add the decoded token to Flask g and request context
+        g.firebase_user = decoded_token
+        g.firebase_uid = decoded_token.get('uid')
+        setattr(request, 'firebase_user', decoded_token)
+        setattr(request, 'firebase_uid', decoded_token.get('uid'))
         
         return f(*args, **kwargs)
     
@@ -174,11 +190,14 @@ def require_firebase_auth(f):
 def optional_firebase_auth(f):
     """
     Decorator for optional Firebase authentication
-    If a valid token is provided, it will be available in request.firebase_user
+    If a valid token is provided, it will be available in request.firebase_user / g.firebase_user
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         auth_header = request.headers.get('Authorization')
+        
+        user = None
+        uid = None
         
         if auth_header:
             parts = auth_header.split()
@@ -186,17 +205,13 @@ def optional_firebase_auth(f):
                 id_token = parts[1]
                 decoded_token = verify_firebase_token(id_token)
                 if decoded_token:
-                    request.firebase_user = decoded_token
-                    request.firebase_uid = decoded_token.get('uid')
-                else:
-                    request.firebase_user = None
-                    request.firebase_uid = None
-            else:
-                request.firebase_user = None
-                request.firebase_uid = None
-        else:
-            request.firebase_user = None
-            request.firebase_uid = None
+                    user = decoded_token
+                    uid = decoded_token.get('uid')
+        
+        g.firebase_user = user
+        g.firebase_uid = uid
+        setattr(request, 'firebase_user', user)
+        setattr(request, 'firebase_uid', uid)
         
         return f(*args, **kwargs)
     
@@ -225,7 +240,7 @@ def get_user_by_email(email: str):
 
 def is_firebase_enabled():
     """Check if Firebase is properly initialized"""
-    return _firebase_app is not None
+    return get_firebase_app() is not None
 
 
 # ================= FCM PUSH NOTIFICATIONS =================
@@ -245,6 +260,11 @@ def send_push_notification(
     - target_role: 'all', 'student', 'faculty', 'admin'
     - data: Optional data payload
     """
+    app = get_firebase_app()
+    if app is None:
+        _safe_print("⚠️ Firebase not initialized. Skipping push notification.")
+        return False
+
     try:
         from firebase_admin import messaging
         
@@ -298,12 +318,12 @@ def send_push_notification(
             )
         
         # Send message
-        response = messaging.send(message)
-        print(f'✅ Push notification sent: {response}')
+        response = messaging.send(message, app=app)
+        _safe_print(f'✅ Push notification sent: {response}')
         return True
         
     except Exception as e:
-        print(f'❌ Error sending push notification: {e}')
+        _safe_print(f'❌ Error sending push notification: {e}')
         return False
 
 
@@ -322,6 +342,11 @@ def send_notification_to_user(
     - body: Notification body
     - data: Optional data payload
     """
+    app = get_firebase_app()
+    if app is None:
+        _safe_print("⚠️ Firebase not initialized. Skipping push notification to device.")
+        return False
+
     try:
         from firebase_admin import messaging
         
@@ -334,10 +359,10 @@ def send_notification_to_user(
             token=token,
         )
         
-        response = messaging.send(message)
-        print(f'✅ Push notification sent to device: {response}')
+        response = messaging.send(message, app=app)
+        _safe_print(f'✅ Push notification sent to device: {response}')
         return True
         
     except Exception as e:
-        print(f'❌ Error sending push notification to device: {e}')
+        _safe_print(f'❌ Error sending push notification to device: {e}')
         return False

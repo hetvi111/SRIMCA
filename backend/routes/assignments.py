@@ -137,11 +137,18 @@ def create_assignment():
         
         assignment_doc['_id'] = result.inserted_id
         
-        # Create notification for new assignment
+        # Create notification for new assignment/exam
         create_notification(
-            title='New Assignment Posted',
-            message=f'A new assignment "{data.get("title", "")}" has been posted',
-            notification_type='upload'
+            title=f'Exam / Assignment: {data.get("title", "")}',
+            message=f'New assignment posted for {data.get("subject", "")}. Due Date: {data.get("due_date", "")}',
+            notification_type='exam',
+            target_role='student',
+            target_courses=data.get('target_courses', []),
+            target_semesters=data.get('target_semesters', []),
+            sender_role=role,
+            sender_id=request.user.get('user_id'),
+            related_id=str(result.inserted_id),
+            related_type='assignment'
         )
         
         return jsonify({

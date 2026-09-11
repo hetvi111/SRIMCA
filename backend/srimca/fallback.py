@@ -13,7 +13,13 @@ def get_fallback_answer(question: str) -> str:
     lines = load_lines()
 
     # 1. Greetings & Bot Identity
-    if any(g == clean_q.strip() or clean_q.strip().startswith(g + ' ') for g in ['hi', 'hello', 'hey', 'namaste', 'good morning', 'good afternoon', 'good evening']):
+    greeting_words = [
+        'hi', 'hy', 'hyy', 'hyyy', 'hii', 'hiii', 'hey', 'heyy', 'heyyy',
+        'hello', 'helloo', 'hlo', 'hllo', 'yo', 'namaste', 'good morning',
+        'good afternoon', 'good evening'
+    ]
+    if (any(g == clean_q.strip() or clean_q.strip().startswith(g + ' ') for g in greeting_words)
+            or re.match(r'^(h+[iayeo]+|hello+)\b', clean_q.strip())):
         return (
             "Hello! I am **SRIMCA AI Assistant**, your smart college guide. "
             "You can ask me about:\n\n"
@@ -33,7 +39,8 @@ def get_fallback_answer(question: str) -> str:
     # 2. What is SRIMCA / About SRIMCA / Full Form
     if any(phrase in q for phrase in [
         'what is srimca', 'about srimca', 'full name', 'full form', 'tell me about srimca',
-        'what is the full form of srimca', 'what does srimca stand for', 'define srimca'
+        'what is the full form of srimca', 'what does srimca stand for', 'define srimca',
+        'srimca detail', 'srimca details', 'srimca info', 'srimca information', 'about college'
     ]) or (len(words) <= 2 and 'srimca' in words):
         return (
             "**SRIMCA** stands for **Shrimad Rajchandra Institute of Management and Computer Application**.\n\n"
@@ -122,9 +129,12 @@ def get_fallback_answer(question: str) -> str:
             top_matches = [m[1] for m in matching_lines[:4]]
             return "\n\n".join(top_matches)
 
-    # 11. General Fallback
+    # 11. General Fallback (for non-SRIMCA / unrecognized questions)
     return (
-        "SRIMCA (Shrimad Rajchandra Institute of Management and Computer Application) is a constituent college of "
-        "Uka Tarsadia University (UTU), Bardoli, offering BCA, MCA, and MBA programs approved by AICTE. "
-        "Please feel free to ask about courses, timetable, campus facilities, or admissions!"
+        "I'm sorry, I don't have information on that. As **SRIMCA AI Assistant**, I am designed to answer questions related to SRIMCA college.\n\n"
+        "You can ask me about:\n"
+        "• College information & Admissions\n"
+        "• Courses offered (BCA, MCA, MBA)\n"
+        "• Class Timetables & Schedules\n"
+        "• Campus Facilities, Library & Placements"
     )

@@ -102,16 +102,18 @@ def get_notifications_for_user(
     user_role: str,
     user_id: str,
     user_courses: list = None,
-    user_semesters: list = None
+    user_semesters: list = None,
+    notification_type: str = None
 ):
     """
-    Get notifications filtered by user role, courses, and semesters
+    Get notifications filtered by user role, courses, semesters, and notification type
     
     Parameters:
     - user_role: Role of the user ('student', 'faculty', 'admin')
     - user_id: ID of the user
     - user_courses: List of courses the student is enrolled in
     - user_semesters: List of semesters the student is in
+    - notification_type: Optional type filter ('exam', 'notice', 'event', 'assignment')
     
     Returns:
     - List of notifications visible to this user
@@ -158,6 +160,10 @@ def get_notifications_for_user(
             final_query = {'$or': queries}
         else:
             final_query = {}
+
+        # Apply notification type filter if provided
+        if notification_type:
+            final_query = {'$and': [final_query, {'type': notification_type}]}
         
         # Get notifications sorted by date (newest first)
         notification_list = list(notifications.find(final_query).sort('created_at', -1))
