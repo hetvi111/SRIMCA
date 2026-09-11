@@ -612,9 +612,14 @@ class ApiService {
   /// Get notifications for current user (role-based)
   static Future<List<Map<String, dynamic>>> getMyNotifications({
     int limit = 50,
+    String? type,
   }) async {
     try {
-      final response = await get('/api/notifications/my?limit=$limit');
+      String url = '/api/notifications/my?limit=$limit';
+      if (type != null && type.isNotEmpty) {
+        url += '&type=$type';
+      }
+      final response = await get(url);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
