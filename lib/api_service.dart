@@ -633,6 +633,20 @@ class ApiService {
     }
   }
 
+  /// Save user's FCM device token to backend
+  static Future<bool> saveFcmToken(String token) async {
+    try {
+      final response = await post(
+        '/api/notifications/save-fcm-token',
+        body: {'fcm_token': token},
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error saving FCM token: $e');
+      return false;
+    }
+  }
+
   /// Get unread notifications count for current user
   static Future<int> getMyUnreadNotificationsCount() async {
     try {

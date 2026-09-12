@@ -1,0 +1,625 @@
+================================================================================
+SRIMCA AI ASSISTANT - 3RD SEMESTER PROJECT PRESENTATION & FILE REFERENCE GUIDE
+================================================================================
+Project Title      : SRIMCA AI Assistant (Smart Campus Management & AI RAG System)
+Academic Level     : Master of Computer Applications (MCA) - 3rd Semester
+Group IDs          : 202504104610006, 202504104610008, 202504104610020, 202504104610022
+Technology Stack   : Frontend: Flutter (Dart) | Backend: Python (Flask)
+                     Database: MongoDB Atlas | AI/RAG: SentenceTransformers + OpenAI GPT
+                     Auth: JWT + Email OTP (SMTP) | Push Notifications: Firebase (FCM)
+================================================================================
+
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+1. PROJECT ARCHITECTURE OVERVIEW
+2. COMPLETE FILE DIRECTORY & PURPOSE INDEX
+3. FILE CONTENT BREAKDOWN (WHAT EACH FILE CONTAINS & CODES)
+4. EXHAUSTIVE API ENDPOINTS REFERENCE GUIDE
+5. MONGODB DATABASE COLLECTIONS & SCHEMA DESIGN
+6. SRIMCA RAG AI PIPELINE & EMBEDDING WORKFLOW
+7. VIVA PRESENTATION QUESTION & ANSWER CHEAT SHEET
+================================================================================
+
+
+================================================================================
+1. PROJECT ARCHITECTURE OVERVIEW
+================================================================================
+The SRIMCA AI Assistant is a hybrid mobile/web application designed for Shrimad
+Rajchandra Institute of Management and Computer Application (SRIMCA). It provides:
+1. 24x7 AI-powered inquiry resolution using Retrieval-Augmented Generation (RAG).
+2. Role-based access control (RBAC) for Admin, Faculty, Student, and Visitor roles.
+3. Digital Notice Board, Assignment Portal, and Study Material Distribution.
+4. QR Code-based Visitor Entry & Gate Security System.
+5. Email OTP Authentication & JWT Session Security.
+6. Real-time Push Notifications via Firebase Cloud Messaging (FCM).
+
+
+================================================================================
+2. COMPLETE FILE DIRECTORY & PURPOSE INDEX
+================================================================================
+
+--------------------------------------------------------------------------------
+ROOT DIRECTORY (/)
+--------------------------------------------------------------------------------
+- README.md                     : Project documentation, setup guide, and overview.
+- TODO.md                       : Main developer task list and progress tracking.
+- CHAT_FIX_TODO.md              : Specific task list for fixing AI chat formatting & UI.
+- MIGRATION_TODO.md             : Documentation of database & framework migration steps.
+- TODO_EMAIL_OTP_FIX.md         : Notes on fixing SMTP email OTP delivery issues.
+- TODO_FIREBASE_EMAIL_OTP.md    : Notes on Firebase vs SMTP authentication integration.
+- TODO_NETWORK_FIX.md           : Network timeout & API connection fix documentation.
+- TODO_OTP_REMOVAL.md           : Historical task tracking for OTP workflow refactoring.
+- TODO_QR_FIX.md                : QR code generation and scanner bug fix notes.
+- TODO_WEB_QR_FIX.md            : Flutter Web compatibility fixes for QR rendering.
+- TODO_backend_fix.md           : Backend error handling and route fix log.
+- DATABASE_TABLES.txt           : Database schema design and collection fields specification.
+- DEPLOY_BACKEND.txt            : Backend deployment manual for Vercel and Railway.
+- DEPLOY_FRONTEND.txt           : Frontend build manual for Flutter Web & Android APK.
+- NORMALIZED_DATABASE_FLOW.txt  : Database ER flow and normalization architecture.
+- activity_daigram.txt          : Text representation of UML activity diagrams.
+- document.txt                  : Full System Requirement Specification (SRS) document.
+- presentation_script.txt       : 4-Presenter viva presentation script.
+- db.txt / table.txt            : Reference files for database setup and test values.
+- .env / .env.example           : Environment key configurations (Mongo URI, JWT, SMTP).
+- .firebaserc / firebase.json   : Firebase CLI project binding and hosting config.
+- vercel.json / Procfile        : Deployment rules for Vercel serverless & Heroku/PaaS.
+- pubspec.yaml / pubspec.lock   : Flutter dependency manifest and locked package versions.
+- analysis_options.yaml         : Static code analyzer and linter configuration for Dart.
+- requirements.txt              : Python package manifest (Flask, pymongo, bcrypt, etc.).
+- runtime.txt                   : Python version specifier for cloud deployment (python-3.10.x).
+- srimca_ai.iml                 : Android Studio / IntelliJ IDEA module metadata file.
+- terminal_ai_chat_test.py      : Terminal CLI script to test AI RAG chat without UI.
+
+--------------------------------------------------------------------------------
+DEPLOYMENT ENTRYPOINT (/api)
+--------------------------------------------------------------------------------
+- api/index.py                  : Vercel serverless entrypoint importing the Flask app.
+
+--------------------------------------------------------------------------------
+BACKEND CORE ENGINE (/backend)
+--------------------------------------------------------------------------------
+- backend/app.py                : Main Flask app entrypoint, CORS setup, blueprint loader.
+- backend/auth.py               : Authentication logic (Register, Login, OTP, JWT, Passwords).
+- backend/config.py             : Centralized configuration manager reading .env parameters.
+- backend/database.py           : PyMongo database connection initialization & collection handles.
+- backend/models.py             : MongoDB collection schema validator functions & data structures.
+- backend/firebase.py           : Firebase Admin SDK initializer & FCM notification dispatcher.
+- backend/notification_helper.py: Email notification helper (SMTP) & Push notification service.
+- backend/generate_visitor_qr.py: Script to generate static gate QR & dynamic visitor QR passes.
+- backend/create_default_faculty.py: Seed script creating initial faculty accounts.
+- backend/create_sample_users.py: Seed script creating test student and faculty accounts.
+- backend/create_sample_visitors.py: Seed script populating mock visitor records.
+- backend/check_user.py         : Quick backend utility script to inspect database users.
+
+--------------------------------------------------------------------------------
+BACKEND ROUTE BLUEPRINTS (/backend/routes)
+--------------------------------------------------------------------------------
+- backend/routes/__init__.py   : Python package initialization for route modules.
+- backend/routes/admin.py       : Admin APIs (User management, stats, AI logs, DB clean).
+- backend/routes/ai.py          : AI assistant endpoint (/api/ai/chat) and query logs.
+- backend/routes/assignments.py : Assignment posting, listing, submission, and grading APIs.
+- backend/routes/faqs.py        : Frequently Asked Questions CRUD operations.
+- backend/routes/materials.py   : Study materials, notes, and syllabus upload/download APIs.
+- backend/routes/notices.py     : Notice creation, broadcasting, pinning, and deletion APIs.
+- backend/routes/notifications.py: User notification retrieval and read status updates.
+- backend/routes/users.py       : Profile management, password updates, and user search.
+- backend/routes/visitor.py     : Visitor registration, QR generation, gate scan, and approvals.
+
+--------------------------------------------------------------------------------
+SRIMCA RAG AI SUB-ENGINE (/backend/srimca)
+--------------------------------------------------------------------------------
+- backend/srimca/srimca_rag.py  : Master RAG orchestrator class combining search & AI answer.
+- backend/srimca/retriever.py   : Cosine similarity vector search engine using embeddings.
+- backend/srimca/gpt_answer.py  : OpenAI GPT API integration for context-based answer generation.
+- backend/srimca/fallback.py    : Rule-based fallback answer generator when LLM is offline.
+- backend/srimca/exact_match.py : Keyword match engine for instant response to standard queries.
+- backend/srimca/recommendations.py: Related query suggestion engine.
+- backend/srimca/build_db.py    : Text chunking and embedding generator script.
+- backend/srimca/loader.py      : BeautifulSoup web scraper loading college web pages.
+- backend/srimca/config.py      : AI settings (SentenceTransformers all-MiniLM-L6-v2, 384 dim).
+- backend/srimca/app.py         : Standalone Flask microservice wrapper for RAG engine.
+- backend/srimca/explanation.txt: Theoretical reference on vector search and embeddings.
+
+--------------------------------------------------------------------------------
+FRONTEND FLUTTER APP (/lib)
+--------------------------------------------------------------------------------
+Core & Configuration:
+- lib/main.dart                 : App entrypoint, theme setup, auth state check, router.
+- lib/api_service.dart          : Central HTTP service executing all REST backend calls.
+- lib/firebase_options.dart     : Firebase credentials configuration for Android/iOS/Web.
+- lib/firebase_service.dart     : Firebase Core & Firestore connection manager.
+- lib/push_notification_service.dart: FCM push notification listener & local alerts.
+- lib/static_data.dart          : Constants, course dropdown lists, and fallback strings.
+
+Auth & Shared UI:
+- lib/splash_screen.dart        : Animated landing splash screen checking saved JWT token.
+- lib/first.dart / welcome_screen.dart: Welcome screen with role navigation tiles.
+- lib/login_screen.dart / login_register_screen.dart: Multi-role user login UI.
+- lib/register_screen.dart     : Account registration UI for Student, Faculty, Visitor.
+- lib/forgot_password_screen.dart / forgot_password_page.dart: Email OTP password reset UI.
+- lib/chat_screen.dart          : Full AI chatbot interface with voice input & markdown.
+- lib/profile_screen.dart / edit_profile_page.dart: User profile view & edit screen.
+- lib/help_page.dart / about_page.dart: Application usage guide & institutional info.
+- lib/security_page.dart / security_profile.dart: Password change & security settings.
+
+Student Module:
+- lib/student_page.dart         : Main student dashboard with notice carousel & quick tools.
+- lib/student_profile_page.dart : Student academic info page (Enrollment, Course, Sem).
+- lib/student_notice_page.dart  : Filterable notice board for students.
+- lib/student_notifications_page.dart: Notification alert feed for students.
+- lib/student_chat_history_page.dart: Previous AI chat interaction history.
+- lib/knowledge_page.dart       : FAQ & campus knowledge search page.
+
+Faculty Module:
+- lib/faculty_dashboard.dart    : Faculty dashboard with pending inquiries & stats.
+- lib/faculty_profile_page.dart : Faculty profile details (Employee ID, Designation).
+- lib/faculty_upload_notice_page.dart / faculty_notice_management_page.dart: Notice posting.
+- lib/upload_study_material_page.dart: Material upload UI for PDF notes & syllabus.
+- lib/faculty_event_management_page.dart: College event creation & manager.
+- lib/faculty_visitor_inquiry_page.dart: Visitor appointment review & approval portal.
+- lib/faculty_ai_assistant_page.dart: Faculty AI tools (Quiz generator, note summarizer).
+- lib/faculty_notifications_page.dart: Faculty alert feed.
+- lib/faculty_management_page.dart: Faculty directory search view.
+
+Admin Module (/lib & /lib/admin):
+- lib/admin_main_dashboard.dart : Main admin panel with active user graphs & stats.
+- lib/user_management.dart     : User table to approve, edit, block, or delete users.
+- lib/admin/admin_edit_user_page.dart: Admin user detail modification form.
+- lib/admin_password_requests_page.dart / lib/admin/password_reset_requests_page.dart: Password reset approval portal.
+- lib/content_management_page.dart: Moderation panel for notices & study materials.
+- lib/database_management_page.dart: MongoDB connection status & backup interface.
+- lib/ai_monitoring_page.dart / ai_monitor_page.dart / ai_query_monitoring_page.dart: AI query telemetry & performance monitor.
+- lib/manage_knowledge_page.dart: RAG knowledge base chunk editor for admins.
+- lib/reports_analytics_page.dart: System usage analytics & PDF report exporter.
+
+Visitor Module (/lib & /lib/visitor):
+- lib/VisitorHomePage.dart / lib/visitor/visitor_home_screen.dart: Visitor home portal.
+- lib/visitor/visitor_welcome_screen.dart: Welcome landing screen for campus visitors.
+- lib/visitor_registration_page.dart / visitor_entry_page.dart: Visitor check-in form.
+- lib/visitor_qr_page.dart       : Digital QR ticket view presented at gate security.
+- lib/visitor_chat_page.dart    : Dedicated AI chatbot for visitor admission queries.
+- lib/visitor_profile_page.dart : Visitor profile and entry logs.
+- lib/visitor_management_page.dart: Gate security verification screen for QR scans.
+- lib/visitor/visitor_info_sheets.dart: Bottom sheet UI for campus directions & facts.
+- lib/visitor_auth_layout.dart / visitor_portal_layout.dart: Shared visitor UI layouts.
+- lib/visitor_theme.dart        : Styling and theme design tokens for visitor pages.
+
+
+================================================================================
+3. FILE CONTENT BREAKDOWN (WHAT EACH FILE CONTAINS)
+================================================================================
+
+--------------------------------------------------------------------------------
+BACKEND CORE FILES
+--------------------------------------------------------------------------------
+1. `backend/app.py`
+   - Purpose: Main application entrypoint.
+   - Contains:
+     * Flask app instantiation (`app = Flask(__name__)`)
+     * CORS policy enabling (`CORS(app)`)
+     * Registration of all API blueprints (auth_bp, admin_bp, ai_bp, notices_bp,
+       assignments_bp, materials_bp, faqs_bp, users_bp, visitor_bp, notifications_bp)
+     * Health check endpoint (`/health`) returning API & DB connection status
+     * Server startup trigger (`app.run(host='0.0.0.0', port=5000)`)
+
+2. `backend/auth.py`
+   - Purpose: Authentication controller & JWT manager.
+   - Contains:
+     * `/api/send-registration-otp`: Generates 6-digit OTP, saves to `email_otps` collection with 10-min expiry, sends email via SMTP.
+     * `/api/verify-registration-otp`: Validates OTP against MongoDB.
+     * `/api/register`: Hashes password with `bcrypt`, validates enrollment/employee ID, creates user document in `users` collection.
+     * `/api/login`: Verifies user credentials, checks if account is approved, generates JWT token containing user ID, email, and role.
+     * `token_required` & `role_required` decorators enforcing security on protected APIs.
+
+3. `backend/config.py`
+   - Purpose: Configuration file parsing environment variables.
+   - Contains:
+     * `MONGODB_URI`: Cloud connection string for MongoDB Atlas.
+     * `JWT_SECRET_KEY`: Encryption key for JWT signature generation.
+     * `SMTP_SERVER`, `SMTP_PORT`, `SMTP_EMAIL`, `SMTP_PASSWORD`: Gmail SMTP settings for sending OTP emails.
+     * `HF_TOKEN`: Hugging Face access token for downloading SentenceTransformers models.
+     * `OPENAI_API_KEY`: API key for GPT response generation.
+
+4. `backend/database.py`
+   - Purpose: MongoDB Atlas database connection manager.
+   - Contains:
+     * `PyMongo` / `MongoClient` connection singleton with retry logic.
+     * Helper functions retrieving collection handles: `get_users_collection()`,
+       `get_notices_collection()`, `get_visitor_records_collection()`,
+       `get_knowledge_collection()`, `get_ai_logs_collection()`.
+
+5. `backend/models.py`
+   - Purpose: Data models and schema structure definitions.
+   - Contains:
+     * Dictionary templates and validation functions for:
+       - User Document (name, email, password_hash, role, enrollment_no, department, is_approved)
+       - Notice Document (title, content, target_role, department, posted_by, created_at, is_pinned)
+       - Assignment Document (title, subject, target_class, due_date, file_url, created_at)
+       - Visitor Record (visitor_id, name, phone, purpose, host_faculty, qr_code, status, check_in_time)
+       - AI Log Record (query, answer, confidence_score, duration_ms, timestamp)
+
+6. `backend/firebase.py`
+   - Purpose: Firebase Admin SDK integration.
+   - Contains:
+     * Firebase credentials initialization using service account JSON or env vars.
+     * `verify_firebase_token(token)`: Verifies mobile client tokens.
+     * `send_push_notification(device_token, title, body, data)`: Sends push alerts via FCM.
+
+7. `backend/generate_visitor_qr.py`
+   - Purpose: Security QR Code generator utility.
+   - Contains:
+     * `qrcode` Python library setup.
+     * `generate_static_gate_qr()`: Creates `visitor_qr.png` pointing to `/api/visitor` and saves directly into `assets/images/`.
+     * `generate_visitor_pass_qr(visitor_id)`: Generates encrypted JSON payload QR for visitor check-in.
+
+--------------------------------------------------------------------------------
+BACKEND ROUTE BLUEPRINTS
+--------------------------------------------------------------------------------
+8. `backend/routes/admin.py`
+   - Contains: Admin dashboard handlers (`/api/admin/stats`, `/api/admin/users`, `/api/admin/users/<id>/approve`, `/api/admin/ai-logs`, `/api/admin/db-health`).
+
+9. `backend/routes/ai.py`
+   - Contains: AI chat route (`/api/ai/chat`). Receives `{ "message": "..." }`, passes prompt to `srimca_rag.py`, logs query performance to `ai_logs` collection, and returns answer with confidence score and recommended follow-up questions.
+
+10. `backend/routes/notices.py`
+    - Contains: CRUD routes (`GET /api/notices`, `POST /api/notices`, `PUT /api/notices/<id>`, `DELETE /api/notices/<id>`). Supports filtering by role (Student/Faculty).
+
+11. `backend/routes/assignments.py`
+    - Contains: Assignment endpoints (`/api/assignments`, `/api/assignments/<id>/submit`). Handles file metadata and submission status.
+
+12. `backend/routes/materials.py`
+    - Contains: Study material endpoints (`/api/materials`). Filters uploaded PDFs by department, course, and semester.
+
+13. `backend/routes/visitor.py`
+    - Contains: Visitor endpoints (`POST /api/visitor/register`, `GET /api/visitor/qr/<id>`, `POST /api/visitor/qr/checkin`, `PUT /api/visitor/approve/<id>`).
+
+--------------------------------------------------------------------------------
+SRIMCA RAG AI ENGINE FILES
+--------------------------------------------------------------------------------
+14. `backend/srimca/srimca_rag.py`
+    - Purpose: Master AI engine class.
+    - Contains:
+      * Orchestrates request execution flow:
+        Step 1: Check `exact_match.py` for direct keyword match.
+        Step 2: Execute vector similarity search via `retriever.py`.
+        Step 3: If context found, query `gpt_answer.py` (or `fallback.py` if offline).
+        Step 4: Generate related question suggestions via `recommendations.py`.
+
+15. `backend/srimca/retriever.py`
+    - Purpose: Vector search implementation.
+    - Contains:
+      * Loads `sentence-transformers/all-MiniLM-L6-v2` embedding model.
+      * Embeds incoming user text query into a 384-dimensional floating-point array.
+      * Computes cosine similarity scores against all vector documents in MongoDB `knowledge` collection.
+      * Returns top K (default K=3) context text chunks.
+
+16. `backend/srimca/gpt_answer.py`
+    - Purpose: OpenAI GPT Integration.
+    - Contains:
+      * Formats prompt with system prompt, retrieved knowledge context, and user question.
+      * Calls OpenAI ChatCompletion API (`gpt-3.5-turbo` / `gpt-4o-mini`).
+      * Returns structured natural language response.
+
+17. `backend/srimca/fallback.py`
+    - Purpose: Offline rule-based answer generator.
+    - Contains:
+      * Keyword and intent rules for SRIMCA courses (MCA, BCA, BBA, MBA), admissions, fees, timings, faculty, and location.
+      * Guarantees 100% availability even without OpenAI API quota or internet connectivity.
+
+18. `backend/srimca/build_db.py`
+    - Purpose: Knowledge base indexing script.
+    - Contains:
+      * Reads raw text files from `backend/srimca/data/*.txt`.
+      * Splits text into logical chunks (paragraphs / lines).
+      * Generates 384-d vector embeddings using SentenceTransformers.
+      * Inserts chunks and vectors into MongoDB `knowledge` collection.
+
+--------------------------------------------------------------------------------
+FRONTEND FLUTTER APP FILES
+--------------------------------------------------------------------------------
+19. `lib/main.dart`
+    - Purpose: Application entrypoint.
+    - Contains: `main()` function initializing `WidgetsFlutterBinding`, `Firebase.initializeApp()`, reading saved JWT token from `SharedPreferences`, and setting initial route (`SplashScreen` vs `StudentPage` vs `FacultyDashboard`).
+
+20. `lib/api_service.dart`
+    - Purpose: Central HTTP service class.
+    - Contains:
+      * `String baseUrl = "https://srimca-lx6ryuw70-2025mca006-5245s-projects.vercel.app"`
+      * Methods: `sendRegistrationOtp()`, `verifyRegistrationOtp()`, `login()`, `register()`, `getNotices()`, `postNotice()`, `askAiAssistant()`, `getVisitorQr()`, `approveVisitor()`, `getAdminStats()`.
+      * Includes automatic `Authorization: Bearer <jwt_token>` header injection on all requests.
+
+21. `lib/chat_screen.dart`
+    - Purpose: AI Chat interface screen.
+    - Contains: UI ListView of chat bubbles (user prompt vs AI response), speech-to-text voice listener button, quick suggestion action chips, markdown renderer for bold/lists/tables, loading animation.
+
+22. `lib/VisitorHomePage.dart` & `lib/visitor_qr_page.dart`
+    - Purpose: Visitor portal UI.
+    - Contains: Dynamic QR ticket renderer using `qr_flutter` package, campus map guide, appointment booking form, and security pass status indicator.
+
+23. `lib/admin_main_dashboard.dart` & `lib/user_management.dart`
+    - Purpose: Admin management UI.
+    - Contains: Dashboard stats cards (Total Users, Active Notices, Today's Visitors), user role modification dropdowns, user approval/rejection toggle switches, and AI query monitoring logs table.
+
+
+================================================================================
+4. EXHAUSTIVE API ENDPOINTS REFERENCE GUIDE
+================================================================================
+
+--------------------------------------------------------------------------------
+A. AUTHENTICATION API MODULE (/api)
+--------------------------------------------------------------------------------
+1. POST /api/send-registration-otp
+   - Purpose  : Sends a 6-digit OTP to the user's email address for verification.
+   - Body     : { "email": "student@srimca.edu.in" }
+   - Response : { "status": "success", "message": "OTP sent to email" }
+
+2. POST /api/verify-registration-otp
+   - Purpose  : Verifies the email OTP entered by the user.
+   - Body     : { "email": "student@srimca.edu.in", "otp": "582910" }
+   - Response : { "status": "success", "message": "Email verified successfully" }
+
+3. POST /api/register
+   - Purpose  : Creates a new user account (Student, Faculty, or Visitor).
+   - Body     : { "name": "John Doe", "email": "john@srimca.edu.in", "password": "...", "role": "student", "enrollment_no": "202504104610006", "department": "Computer Science" }
+   - Response : { "status": "success", "user_id": "..." }
+
+4. POST /api/login
+   - Purpose  : Authenticates user credentials and returns JWT session token.
+   - Body     : { "email": "john@srimca.edu.in", "password": "..." }
+   - Response : { "token": "eyJhbGciOi...", "user": { "id": "...", "name": "John Doe", "role": "student" } }
+
+5. GET /api/verify
+   - Purpose  : Validates active JWT token upon app launch.
+   - Header   : Authorization: Bearer <jwt_token>
+   - Response : { "valid": true, "user": { ... } }
+
+6. POST /api/change-password
+   - Purpose  : Updates user account password.
+   - Header   : Authorization: Bearer <jwt_token>
+   - Body     : { "old_password": "...", "new_password": "..." }
+   - Response : { "status": "success", "message": "Password updated successfully" }
+
+--------------------------------------------------------------------------------
+B. AI ASSISTANT API MODULE (/api/ai)
+--------------------------------------------------------------------------------
+7. POST /api/ai/chat
+   - Purpose  : Processes natural language question through RAG pipeline and returns AI response.
+   - Header   : Authorization: Bearer <jwt_token>
+   - Body     : { "message": "What is the admission procedure for MCA at SRIMCA?" }
+   - Response : {
+                  "answer": "Admission to MCA at SRIMCA is based on CMAT scores...",
+                  "confidence_score": 0.94,
+                  "source": "rag_knowledge_base",
+                  "recommendations": [
+                    "What are the eligibility criteria for MCA?",
+                    "What is the total fee structure for MCA?"
+                  ]
+                }
+
+8. GET /api/ai/health
+   - Purpose  : Checks AI vector search and model availability status.
+   - Response : { "status": "online", "model": "all-MiniLM-L6-v2", "vector_count": 142 }
+
+--------------------------------------------------------------------------------
+C. NOTICE BOARD API MODULE (/api/notices)
+--------------------------------------------------------------------------------
+9. GET /api/notices
+   - Purpose  : Retrieves list of notices. Can filter by role or department.
+   - Params   : ?target_role=student&department=Computer+Science
+   - Response : [ { "id": "...", "title": "Mid-Sem Exam Schedule", "content": "...", "posted_by": "Prof. Smith", "created_at": "2026-09-10" } ]
+
+10. POST /api/notices
+    - Purpose  : Creates a new notice (Faculty or Admin only).
+    - Header   : Authorization: Bearer <jwt_token>
+    - Body     : { "title": "Holiday Notice", "content": "College will remain closed on...", "target_role": "all", "is_pinned": true }
+    - Response : { "status": "success", "notice_id": "..." }
+
+11. DELETE /api/notices/<id>
+    - Purpose  : Deletes a specific notice by ID.
+    - Header   : Authorization: Bearer <jwt_token>
+    - Response : { "status": "success", "message": "Notice deleted" }
+
+--------------------------------------------------------------------------------
+D. VISITOR MANAGEMENT API MODULE (/api/visitor)
+--------------------------------------------------------------------------------
+12. POST /api/visitor/register
+    - Purpose  : Self-registration for campus visitors requesting gate entry.
+    - Body     : { "name": "Rajesh Kumar", "phone": "9876543210", "purpose": "Parents Inquiry", "host_faculty": "Dr. Patel" }
+    - Response : { "status": "success", "visitor_id": "VIS-9082", "qr_code": "data:image/png;base64,..." }
+
+13. GET /api/visitor/qr/<visitor_id>
+    - Purpose  : Fetches QR code image pass for a registered visitor.
+    - Response : PNG Image stream / Base64 string.
+
+14. POST /api/visitor/qr/checkin
+    - Purpose  : Security gate scan endpoint verifying visitor QR pass validity.
+    - Body     : { "qr_data": "VIS-9082" }
+    - Response : { "status": "approved", "visitor": { "name": "Rajesh Kumar", "host": "Dr. Patel" } }
+
+15. PUT /api/visitor/approve/<visitor_id>
+    - Purpose  : Faculty/Admin endpoint to approve or reject a visitor's entry request.
+    - Header   : Authorization: Bearer <jwt_token>
+    - Body     : { "status": "approved" }
+    - Response : { "status": "success", "message": "Visitor entry approved" }
+
+--------------------------------------------------------------------------------
+E. USER & ADMIN MANAGEMENT API MODULE (/api/admin & /api/users)
+--------------------------------------------------------------------------------
+16. GET /api/users/profile
+    - Purpose  : Fetches complete profile details of logged-in user.
+    - Header   : Authorization: Bearer <jwt_token>
+    - Response : { "name": "...", "email": "...", "role": "...", "department": "..." }
+
+17. GET /api/admin/users
+    - Purpose  : Retrieves list of all registered users (Admin only).
+    - Header   : Authorization: Bearer <jwt_token>
+    - Response : [ { "id": "...", "name": "...", "role": "...", "is_approved": true } ]
+
+18. PUT /api/admin/users/<id>/approve
+    - Purpose  : Approves or blocks a user account.
+    - Header   : Authorization: Bearer <jwt_token>
+    - Body     : { "is_approved": true }
+    - Response : { "status": "success" }
+
+19. GET /api/admin/stats
+    - Purpose  : Returns system usage summary stats for admin dashboard.
+    - Header   : Authorization: Bearer <jwt_token>
+    - Response : { "total_students": 450, "total_faculty": 28, "today_visitors": 12, "ai_queries_today": 184 }
+
+20. GET /api/admin/ai-logs
+    - Purpose  : Retrieves log of recent AI queries, accuracy metrics, and response times.
+    - Header   : Authorization: Bearer <jwt_token>
+    - Response : [ { "query": "Exam dates?", "response_time_ms": 320, "confidence": 0.92, "timestamp": "..." } ]
+
+
+================================================================================
+5. MONGODB DATABASE COLLECTIONS & SCHEMA DESIGN
+================================================================================
+
+1. Collection: `users`
+   - Description: Stores all user accounts across roles.
+   - Fields:
+     * `_id`           : ObjectId (Primary Key)
+     * `name`          : String
+     * `email`         : String (Unique Index)
+     * `password_hash` : String (Bcrypt Hashed)
+     * `role`          : String ("admin" | "faculty" | "student" | "visitor")
+     * `enrollment_no` : String (Optional, for students)
+     * `employee_id`   : String (Optional, for faculty)
+     * `department`    : String
+     * `is_approved`   : Boolean (Account verification flag)
+     * `created_at`    : ISODate
+
+2. Collection: `email_otps`
+   - Description: Stores 6-digit email OTPs for registration & password reset.
+   - Fields:
+     * `_id`        : ObjectId
+     * `email`      : String
+     * `otp`        : String
+     * `expires_at` : ISODate (TTL index automatically deletes after 10 mins)
+     * `created_at` : ISODate
+
+3. Collection: `notices`
+   - Description: Campus notices and official announcements.
+   - Fields:
+     * `_id`         : ObjectId
+     * `title`       : String
+     * `content`     : String
+     * `target_role` : String ("student" | "faculty" | "all")
+     * `department`  : String
+     * `posted_by`   : String (Faculty / Admin name)
+     * `is_pinned`   : Boolean
+     * `created_at`  : ISODate
+
+4. Collection: `visitor_records`
+   - Description: Security gate visitor check-in records.
+   - Fields:
+     * `_id`          : ObjectId
+     * `visitor_id`   : String (Unique ID, e.g., "VIS-1049")
+     * `name`         : String
+     * `phone`        : String
+     * `purpose`      : String
+     * `host_faculty` : String
+     * `status`       : String ("pending" | "approved" | "rejected" | "completed")
+     * `check_in`     : ISODate
+     * `check_out`    : ISODate
+
+5. Collection: `knowledge`
+   - Description: Vector database collection for SRIMCA AI RAG engine.
+   - Fields:
+     * `_id`        : ObjectId
+     * `text`       : String (Knowledge chunk content)
+     * `embedding`  : Array of 384 Floats (SentenceTransformers vector)
+     * `category`   : String ("admission" | "fees" | "syllabus" | "faculty" | "general")
+     * `updated_at` : ISODate
+
+6. Collection: `ai_logs`
+   - Description: Telemetry collection tracking AI assistant usage.
+   - Fields:
+     * `_id`         : ObjectId
+     * `user_id`     : String
+     * `query`       : String
+     * `answer`      : String
+     * `confidence`  : Float
+     * `duration_ms`: Integer
+     * `timestamp`   : ISODate
+
+
+================================================================================
+6. SRIMCA RAG AI PIPELINE & EMBEDDING WORKFLOW
+================================================================================
+
+The Retrieval-Augmented Generation (RAG) system operates through a 5-step pipeline:
+
+STEP 1: Document Processing & Vector Indexing (`build_db.py`)
+- Official SRIMCA data is collected in `.txt` format under `backend/srimca/data/`.
+- Text is split into small semantic chunks (100–200 words each).
+- Each chunk is passed through the `sentence-transformers/all-MiniLM-L6-v2` model.
+- The model generates a 384-dimensional dense vector representing the semantic meaning.
+- Vectors and original text chunks are indexed into the `knowledge` collection in MongoDB Atlas.
+
+STEP 2: Query Embedding (`retriever.py`)
+- When a user submits a question in the Flutter app (e.g., "What are the passing marks for MCA?"), the backend receives the string at `/api/ai/chat`.
+- The query string is encoded into the same 384-dimensional vector space using `SentenceTransformer.encode(query)`.
+
+STEP 3: Vector Similarity Search (`retriever.py`)
+- The system calculates Cosine Similarity between the query vector and all stored knowledge vectors in MongoDB:
+  Cosine Similarity = (A . B) / (||A|| * ||B||)
+- The top 3 chunks with highest similarity scores above threshold (e.g., score > 0.65) are selected as reference context.
+
+STEP 4: Answer Generation (`gpt_answer.py` / `fallback.py`)
+- If OpenAI API key is active: A prompt combining system instructions, retrieved knowledge context chunks, and user prompt is sent to OpenAI GPT.
+- If offline/no API quota: The system invokes `fallback.py`, which maps query intent against deterministic response templates to guarantee zero-downtime answers.
+
+STEP 5: Post-Processing & Recommendations (`recommendations.py`)
+- The response, confidence score, and 2-3 suggested follow-up questions are formatted and returned to the Flutter app as JSON.
+- Telemetry data is saved asynchronously to the `ai_logs` collection for admin monitoring.
+
+
+================================================================================
+7. VIVA PRESENTATION QUESTION & ANSWER CHEAT SHEET
+================================================================================
+
+Q1: What is the main objective of your project?
+A1: The main objective of SRIMCA AI Assistant is to automate campus inquiry resolution 24x7 using AI RAG technology, streamline communication between students, faculty, and administration through digital notices, and modernize security gate access using QR-based visitor management.
+
+Q2: Why did you choose Flutter for the frontend and Python Flask for the backend?
+A2: Flutter allows building cross-platform apps (Android, iOS, Web) from a single codebase with native performance and rich UI. Python Flask is lightweight, highly modular, and provides seamless integration with Python AI/ML libraries like SentenceTransformers, PyTorch, PyMongo, and OpenAI.
+
+Q3: Explain what RAG is and why you didn't just use standard ChatGPT?
+A3: RAG stands for Retrieval-Augmented Generation. Standard ChatGPT doesn't know private campus data (like SRIMCA exam dates or faculty offices) and can hallucinate. RAG first retrieves factual, verified SRIMCA documents from our MongoDB vector database and feeds them to the AI model as context, ensuring 100% accurate, hallucination-free answers specific to SRIMCA.
+
+Q4: What embedding model do you use and what is vector dimension?
+A4: We use `sentence-transformers/all-MiniLM-L6-v2`, an open-source lightweight transformer model that outputs 384-dimensional dense vectors. It runs locally on the CPU without requiring paid external API tokens for embedding generation.
+
+Q5: How is security handled in your application?
+A5: Security is implemented at multiple layers:
+    1. Passwords are hashed using `bcrypt` before database storage.
+    2. Email OTP verification ensures valid institutional email ownership during registration.
+    3. Session access is protected using JSON Web Tokens (JWT) with signature verification on all private REST APIs.
+    4. Role-based access control (RBAC) ensures students cannot access faculty or admin endpoints.
+
+Q6: How does the Visitor QR entry system work?
+A6: When a visitor registers on the mobile app, the backend creates a unique visitor ID and encrypts it into a QR code PNG image. At the gate, security scans the QR code using the app. The scanner sends the scanned ID to `/api/visitor/qr/checkin`, which checks MongoDB and verifies whether the visitor is approved by host faculty, changing their status to "checked-in".
+
+Q7: What happens if the internet connection or OpenAI API goes down?
+A7: Our system features an intelligent dual-engine fallback system (`fallback.py`). If the OpenAI API is unreachable or rate-limited, the backend automatically switches to intent-matching and rule-based keyword responses, guaranteeing that users still get instant, reliable answers offline.
+
+Q8: What database are you using and why MongoDB Atlas over SQL?
+A8: We use MongoDB Atlas (Cloud NoSQL). MongoDB was chosen because knowledge chunks, AI logs, and user profiles have flexible schemas, and MongoDB Atlas offers built-in cloud hosting, automated scaling, TTL indexes for OTP deletion, and high performance for vector array storage and JSON API responses.
+
+Q9: What packages did you use in Flutter for state management and networking?
+A9: We used the `http` package for REST API communication, `shared_preferences` for persistent JWT session storage, `firebase_messaging` & `flutter_local_notifications` for push notifications, `qr_flutter` & `mobile_scanner` for QR rendering and scanning, and standard Flutter StatefulWidgets / Providers for state management.
+
+10: What are the future enhancements planned for this project?
+A10: Future enhancements include:
+     1. Multimodal RAG capable of processing PDF syllabus documents, handwritten notes, and images.
+     2. Voice-guided conversational AI in local languages (Gujarati/Hindi).
+     3. Automated AI assignment grading for faculty.
+     4. Progressive Web App (PWA) offline installation.
+
+================================================================================
+END OF 3RD SEMESTER PRESENTATION REFERENCE FILE
+================================================================================

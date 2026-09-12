@@ -245,20 +245,45 @@ def is_firebase_enabled():
 
 # ================= FCM PUSH NOTIFICATIONS =================
 
+def _get_android_config(priority: str = 'medium'):
+    """Generate Android-specific configuration with priority mapping"""
+    try:
+        from firebase_admin import messaging
+        priority_map = {
+            'emergency': 'high',
+            'high': 'high',
+            'medium': 'normal',
+            'low': 'normal'
+        }
+        fcm_priority = priority_map.get(priority.lower(), 'normal')
+        return messaging.AndroidConfig(
+            priority=fcm_priority,
+            notification=messaging.AndroidNotification(
+                channel_id='srimca_high_priority' if fcm_priority == 'high' else 'srimca_default'
+            )
+        )
+    except Exception:
+        return None
+
+
 def send_push_notification(
     title: str,
     body: str,
     target_role: str = 'all',
+    target_topics: list = None,
+    priority: str = 'medium',
     data: dict = None
 ):
     """
-    Send push notification to users based on role
+    Send push notification to users based on role, target topics, and priority.
     
     Parameters:
     - title: Notification title
     - body: Notification body
     - target_role: 'all', 'student', 'faculty', 'admin'
-    - data: Optional data payload
+    - target_topics: List of topic names (e.g. ['mca', 'mca_sem3'])
+    - priority: 'emergency', 'high', 'medium', 'low'
+    - data: Optional data payload (e.g. {'route': 'notice', 'notice_id': '123'})
     """
     app = get_firebase_app()
     if app is None:
@@ -267,59 +292,82 @@ def send_push_notification(
 
     try:
         from firebase_admin import messaging
+
+        data_payload = {str(k): str(v) for k, v in (data or {}).items()}
+        data_payload['priority'] = priority
+        if 'route' not in data_payload and 'type' in data_payload:
+            data_payload['route'] = data_payload['type']
+
+        android_config = _get_android_config(priority)
+
+        # Build list of topics to send to
+        topics_to_send = set()
         
-        # Create message based on target
-        if target_role == 'all':
-            # Send to all users via topic
-            message = messaging.Message(
-                notification=messaging.Notification(
-                    title=title,
-                    body=body,
-                ),
-                data=data or {},
-                topic='all',
-            )
-        elif target_role == 'student':
-            message = messaging.Message(
-                notification=messaging.Notification(
-                    title=title,
-                    body=body,
-                ),
-                data=data or {},
-                topic='student',
-            )
-        elif target_role == 'faculty':
-            message = messaging.Message(
-                notification=messaging.Notification(
-                    title=title,
-                    body=body,
-                ),
-                data=data or {},
-                topic='faculty',
-            )
-        elif target_role == 'admin':
-            message = messaging.Message(
-                notification=messaging.Notification(
-                    title=title,
-                    body=body,
-                ),
-                data=data or {},
-                topic='admin',
-            )
-        else:
-            # Default to all
-            message = messaging.Message(
-                notification=messaging.Notification(
-                    title=title,
-                    body=body,
-                ),
-                data=data or {},
-                topic='all',
-            )
-        
-        # Send message
-        response = messaging.send(message, app=app)
-        _safe_print(f'✅ Push notification sent: {response}')
+        if target_role:
+            role_topic = target_role if target_role in ['student', 'faculty', 'admin'] else 'all'
+            topics_to_send.add(role_topic)
+            
+        if target_topics:
+            for top in target_topics:
+                clean_top = str(top).strip().lower().replace(' ', '_')
+                if clean_top:
+                    topics_to_send.add(clean_top)
+
+        # 1. Send push to each target topic
+        for topic_name in topics_to_send:
+            try:
+                message = messaging.Message(
+                    notification=messaging.Notification(
+                        title=title,
+                        body=body,
+                    ),
+                    data=data_payload,
+                    topic=topic_name,
+                    android=android_config,
+                )
+                response = messaging.send(message, app=app)
+                _safe_print(f'✅ FCM push notification sent to topic "{topic_name}": {response}')
+            except Exception as topic_err:
+                _safe_print(f'⚠️ Error sending to topic "{topic_name}": {topic_err}')
+
+        # 2. If notification type is exam, notice, or event, also dispatch to type topic
+        notif_type = data_payload.get('type')
+        if notif_type in ['exam', 'notice', 'event'] and notif_type not in topics_to_send:
+            try:
+                cat_message = messaging.Message(
+                    notification=messaging.Notification(
+                        title=title,
+                        body=body,
+                    ),
+                    data=data_payload,
+                    topic=notif_type,
+                    android=android_config,
+                )
+                cat_response = messaging.send(cat_message, app=app)
+                _safe_print(f'✅ FCM push notification sent to category topic "{notif_type}": {cat_response}')
+            except Exception as cat_err:
+                _safe_print(f'⚠️ Error sending to category topic: {cat_err}')
+
+        # 3. Send direct push to saved device FCM tokens in database
+        try:
+            from database import get_collection, Collections
+            users_col = get_collection(Collections.USERS)
+            query = {'fcm_token': {'$exists': True, '$ne': None, '$ne': ''}}
+            if target_role in ['student', 'faculty', 'admin']:
+                query['role'] = target_role
+                
+            user_docs = list(users_col.find(query, {'fcm_token': 1}))
+            tokens = [u['fcm_token'] for u in user_docs if u.get('fcm_token')]
+            
+            if tokens:
+                for token in tokens:
+                    try:
+                        send_notification_to_user(token, title, body, data_payload, priority=priority)
+                    except Exception:
+                        pass
+        except Exception as db_err:
+            _safe_print(f'⚠️ Error fetching device FCM tokens from DB: {db_err}')
+
         return True
         
     except Exception as e:
@@ -331,7 +379,8 @@ def send_notification_to_user(
     token: str,
     title: str,
     body: str,
-    data: dict = None
+    data: dict = None,
+    priority: str = 'medium'
 ):
     """
     Send push notification to a specific device token
@@ -341,6 +390,7 @@ def send_notification_to_user(
     - title: Notification title
     - body: Notification body
     - data: Optional data payload
+    - priority: Notification priority tag
     """
     app = get_firebase_app()
     if app is None:
@@ -349,18 +399,23 @@ def send_notification_to_user(
 
     try:
         from firebase_admin import messaging
-        
+
+        data_payload = {str(k): str(v) for k, v in (data or {}).items()}
+        data_payload['priority'] = priority
+        android_config = _get_android_config(priority)
+
         message = messaging.Message(
             notification=messaging.Notification(
                 title=title,
                 body=body,
             ),
-            data=data or {},
+            data=data_payload,
             token=token,
+            android=android_config,
         )
         
         response = messaging.send(message, app=app)
-        _safe_print(f'✅ Push notification sent to device: {response}')
+        _safe_print(f'✅ FCM push notification sent to device token: {response}')
         return True
         
     except Exception as e:

@@ -28,8 +28,9 @@ def create_notification(
     message: str, 
     notification_type: str = 'info',
     target_role: str = 'all',  # 'all', 'student', 'faculty', 'admin'
-    target_courses: list = None,  # List of courses for students (e.g., ['BCA', 'BBA'])
-    target_semesters: list = None,  # List of semesters for students (e.g., ['1st', '2nd'])
+    target_courses: list = None,  # List of courses for students (e.g., ['MCA', 'BCA'])
+    target_semesters: list = None,  # List of semesters for students (e.g., ['1st', 'sem3'])
+    priority: str = 'medium',  # 'emergency', 'high', 'medium', 'low'
     sender_role: str = 'admin',  # 'admin', 'faculty'
     sender_id: str = None,
     sender_name: str = None,
@@ -38,15 +39,16 @@ def create_notification(
     send_push: bool = True  # Whether to send push notification
 ):
     """
-    Create a new notification in the database with role-based targeting
+    Create a new notification in the database with role & course/semester targeting
     
     Parameters:
     - title: Notification title
     - message: Notification message
     - notification_type: Type of notification ('notice', 'event', 'assignment', 'upload', 'user_register', 'user_login', 'system')
     - target_role: Target role ('all', 'student', 'faculty', 'admin')
-    - target_courses: List of courses for students (e.g., ['BCA', 'BBA'])
-    - target_semesters: List of semesters for students (e.g., ['1st', '2nd'])
+    - target_courses: List of courses for students (e.g., ['MCA', 'BCA'])
+    - target_semesters: List of semesters for students (e.g., ['1st', 'sem3'])
+    - priority: Notification priority ('emergency', 'high', 'medium', 'low')
     - sender_role: Role of sender ('admin', 'faculty')
     - sender_id: ID of sender
     - sender_name: Name of sender
@@ -63,6 +65,7 @@ def create_notification(
             'target_role': target_role,
             'target_courses': target_courses or [],
             'target_semesters': target_semesters or [],
+            'priority': priority,
             'sender_role': sender_role,
             'sender_id': sender_id,
             'sender_name': sender_name,
@@ -75,6 +78,17 @@ def create_notification(
         result = notifications.insert_one(notification_doc)
         notification_id = str(result.inserted_id)
         
+        # Build dynamic target topics list
+        target_topics = []
+        if target_courses:
+            for course in target_courses:
+                course_clean = str(course).strip().lower().replace(' ', '_')
+                target_topics.append(course_clean)
+                if target_semesters:
+                    for sem in target_semesters:
+                        sem_clean = str(sem).strip().lower().replace(' ', '')
+                        target_topics.append(f"{course_clean}_{sem_clean}")
+
         # Send push notification if enabled
         if send_push:
             try:
@@ -84,10 +98,19 @@ def create_notification(
                     data_payload = {
                         'notification_id': notification_id,
                         'type': notification_type,
+                        'route': related_type or notification_type or 'notice',
                         'related_type': related_type or '',
                         'related_id': related_id or '',
+                        'priority': priority,
                     }
-                    firebase_module.send_push_notification(title, message, target_role, data_payload)
+                    firebase_module.send_push_notification(
+                        title=title,
+                        body=message,
+                        target_role=target_role,
+                        target_topics=target_topics,
+                        priority=priority,
+                        data=data_payload
+                    )
             except (ImportError, Exception) as e:
                 # Firebase not configured or error, skip push silently
                 pass

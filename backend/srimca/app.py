@@ -18,7 +18,7 @@ def ask(question):
         if gpt_ans:
             return gpt_ans
     except Exception as e:
-        print(f"⚠️  GPT error: {e}")
+        print(f"[GPT Error]: {e}")
     
     # Step 3: Fallback to keyword search
     return get_fallback_answer(question)

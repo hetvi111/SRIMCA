@@ -308,3 +308,54 @@ def delete_notification(notification_id):
     except Exception as e:
         print(f"Delete notification error: {e}")
         return jsonify({'error': 'Failed to delete notification'}), 500
+
+
+@notifications_bp.route('/notifications/save-fcm-token', methods=['POST'], endpoint='save_fcm_token')
+@require_auth
+def save_fcm_token():
+    """
+    Save or update FCM device token for logged in user
+    """
+    try:
+        user_id = request.user.get('user_id')
+        data = request.get_json() or {}
+        fcm_token = data.get('fcm_token')
+        
+        if not fcm_token:
+            return jsonify({'error': 'fcm_token is required'}), 400
+            
+        users_collection = get_collection(Collections.USERS)
+        users_collection.update_one(
+            {'_id': ObjectId(user_id)},
+            {'$set': {'fcm_token': fcm_token, 'updated_at': datetime.utcnow()}}
+        )
+        
+        return jsonify({'message': 'FCM token saved successfully'}), 200
+    except Exception as e:
+        print(f"Save FCM token error: {e}")
+        return jsonify({'error': 'Failed to save FCM token'}), 500
+
+
+@notifications_bp.route('/notifications/test-push', methods=['POST'], endpoint='test_push_notification')
+@require_auth
+def test_push_notification():
+    """
+    Send a test FCM push notification
+    """
+    try:
+        data = request.get_json() or {}
+        title = data.get('title', 'SRIMCA AI Test Notification')
+        body = data.get('body', 'Smart notification delivery test for exams, notices, and events.')
+        target_role = data.get('target_role', 'all')
+        
+        from firebase import send_push_notification
+        success = send_push_notification(title, body, target_role=target_role, data={'type': 'test'})
+        
+        return jsonify({
+            'message': 'Test push notification processing completed',
+            'sent': success
+        }), 200
+    except Exception as e:
+        print(f"Test push notification error: {e}")
+        return jsonify({'error': f'Failed to send test push: {str(e)}'}), 500
+

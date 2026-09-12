@@ -76,10 +76,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
         final String role = (user['role'] as String? ?? '').toLowerCase();
 
-        // Subscribe to role-based notifications
+        // Subscribe to role, course, and semester FCM topics
         try {
           if (role.isNotEmpty && !kIsWeb) {
-            await PushNotificationService.subscribeToRoleTopics(role);
+            await PushNotificationService.subscribeToRoleAndCourseTopics(
+              role: role,
+              course: user['course']?.toString(),
+              semester: user['semester']?.toString(),
+            );
           }
         } catch (e) {
           debugPrint('FCM topic subscription notice: $e');

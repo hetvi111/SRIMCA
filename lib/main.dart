@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firebase_options.dart';
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:srimca_ai/splash_screen.dart';
 import 'package:srimca_ai/first.dart';
 import 'package:srimca_ai/login_screen.dart';
 import 'package:srimca_ai/register_screen.dart';
-import 'package:srimca_ai/login_register_screen.dart';
-import 'package:srimca_ai/welcome_screen.dart' as welcome;
 import 'package:srimca_ai/admin_main_dashboard.dart';
 import 'package:srimca_ai/user_management.dart';
 import 'package:srimca_ai/faculty_dashboard.dart';
@@ -19,7 +17,6 @@ import 'package:srimca_ai/reports_analytics_page.dart';
 import 'package:srimca_ai/security_page.dart';
 import 'package:srimca_ai/visitor/visitor_home_screen.dart';
 import 'package:srimca_ai/visitor/visitor_welcome_screen.dart';
-import 'package:srimca_ai/visitor_registration_page.dart';
 import 'package:srimca_ai/visitor_qr_page.dart';
 import 'package:srimca_ai/student_page.dart' as student;
 import 'package:srimca_ai/student_notifications_page.dart';
@@ -48,6 +45,8 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
     await PushNotificationService.initialize();
   } catch (e) {
@@ -90,6 +89,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'SRIMCA AI Assistant',
       debugShowCheckedModeBanner: false,
       themeMode: _themeMode,

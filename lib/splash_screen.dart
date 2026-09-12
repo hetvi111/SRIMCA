@@ -62,7 +62,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
           if (role.isNotEmpty && !kIsWeb) {
             try {
-              await PushNotificationService.subscribeToRoleTopics(role);
+              await PushNotificationService.subscribeToRoleAndCourseTopics(
+                role: role,
+                course: user['course']?.toString(),
+                semester: user['semester']?.toString(),
+              );
             } catch (e) {
               debugPrint('FCM topic subscription note: $e');
             }
